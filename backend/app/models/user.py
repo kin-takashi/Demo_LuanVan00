@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, Enum, Boolean, DateTime, F
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
+from sqlalchemy.sql.expression import and_
 
 
 class User(Base):
@@ -20,11 +21,11 @@ class User(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationships
-    user_roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan")
-    shop = relationship("Shop", back_populates="owner", uselist=False, foreign_keys="Shop.shop_id")
-    shipper = relationship("Shipper", back_populates="user", uselist=False, foreign_keys="Shipper.shipper_id")
-    notifications = relationship("Notification", back_populates="user", foreign_keys="Notification.user_id")
-    orders = relationship("Order", back_populates="user", foreign_keys="Order.user_id")
+    user_roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan", foreign_keys="[UserRole.user_id]")
+    shop = relationship("Shop", back_populates="owner", uselist=False, foreign_keys="[Shop.shop_id]", primaryjoin="User.user_id==Shop.shop_id")
+    shipper = relationship("Shipper", back_populates="user", uselist=False, foreign_keys="[Shipper.shipper_id]")
+    notifications = relationship("Notification", back_populates="user", foreign_keys="[Notification.user_id]")
+    orders = relationship("Order", back_populates="user", foreign_keys="[Order.user_id]")
     cart_items = relationship("Cart", back_populates="user")
 
 

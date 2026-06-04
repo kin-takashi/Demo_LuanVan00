@@ -4,12 +4,12 @@ from typing import List
 
 
 class Settings(BaseSettings):
-    # Database (PostgreSQL / Supabase)
+    # Database (MySQL)
     DB_HOST: str = "localhost"
-    DB_PORT: int = 5432
-    DB_USER: str = "postgres"
-    DB_PASSWORD: str = "password"
-    DB_NAME: str = "postgres"
+    DB_PORT: int = 3306
+    DB_USER: str = "shopvn_user"
+    DB_PASSWORD: str = "shopvn_pass"
+    DB_NAME: str = "ecommerce_db"
 
     # Supabase
     SUPABASE_URL: str = ""
@@ -68,7 +68,7 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self):
-        return "postgresql+psycopg2://{}:{}@{}:{}/{}".format(
+        return "mysql+pymysql://{}:{}@{}:{}/{}".format(
             self.DB_USER, self.DB_PASSWORD, self.DB_HOST, self.DB_PORT, self.DB_NAME
         )
 

@@ -1,0 +1,9 @@
+# Extension Solutions
+# Ghi lại các giải pháp từ Claude extension khi lỗi xảy ra
+
+# Tạo file: <error-name>-solution.txt
+# Format:
+# Problem: <mô tả lỗi>
+# Solution: <giải pháp từ extension>
+# Applied: <ngày áp dụng>
+# Status: FIXED/PENDING

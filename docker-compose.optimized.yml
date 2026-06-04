@@ -1,9 +1,10 @@
 version: '3.8'
 
 services:
+  # Database
   db:
     image: mysql:8.0
-    container_name: shopvn_db
+    container_name: sub_shopvn_db
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root_password
@@ -20,47 +21,73 @@ services:
       timeout: 5s
       retries: 5
 
+  # Cache
   redis:
     image: redis:7-alpine
     container_name: shopvn_redis
     restart: unless-stopped
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # Backend API
   backend:
     build:
-      context: ./backend          # ← FastAPI backend
-      dockerfile: Dockerfile
-    container_name: shopvn_backend
+      context: ./backend
+      dockerfile: Dockerfile.sub_back_luanvan
+    container_name: sub_shopvn_backend
     restart: unless-stopped
     env_file: ./backend/.env
     environment:
-      # Dùng host.docker.internal để backend Docker kết nối vào XAMPP MySQL trên máy host
-      DB_HOST: host.docker.internal
+      DB_HOST: db
       DB_PORT: 3306
       DB_USER: shopvn_user
       DB_PASSWORD: shopvn_pass
       DB_NAME: ecommerce_db
-      REDIS_HOST: host.docker.internal
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "8000:8000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"   # cần thiết trên Linux, Windows/Mac tự có
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./backend/uploads:/app/uploads
       - ./backend/logs:/app/logs
-    command: uvicorn app.main:socket_app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
+  # Frontend
   frontend:
     build:
-      context: ./frontend          # ← React TS frontend
-      dockerfile: Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile.sup_front_luanvan
     container_name: shopvn_frontend
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "3000:3000"
     depends_on:
       - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    environment:
+      VITE_API_URL: http://localhost:8000
 
 volumes:
   db_data:
+
+networks:
+  default:
+    name: shopvn_network

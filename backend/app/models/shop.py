@@ -1,6 +1,5 @@
-from sqlalchemy import Column, Integer, String, Text, Enum, Boolean, DateTime, ForeignKey, Date, UniqueConstraint, Index
+from sqlalchemy import Column, Integer, String, Text, Enum, DateTime, ForeignKey, Date, Index, func
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 from app.database import Base
 
 
@@ -22,9 +21,9 @@ class Shop(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationships
-    owner = relationship("User", back_populates="shop", foreign_keys=[shop_id])
-    employees = relationship("ShopEmployee", back_populates="shop", foreign_keys="ShopEmployee.shop_id")
-    products = relationship("Product", back_populates="shop", foreign_keys="Product.shop_id")
+    owner = relationship("User", back_populates="shop", foreign_keys=[shop_id], primaryjoin="Shop.shop_id==User.user_id")
+    # employees = relationship("ShopEmployee", back_populates="shop", foreign_keys="ShopEmployee.shop_id")  # TODO: Fix later
+    products = relationship("Product", back_populates="shop", foreign_keys="[Product.shop_id]", primaryjoin="Shop.shop_id==Product.shop_id")
 
 
 class ShopRegistration(Base):
@@ -54,7 +53,7 @@ class ShopEmployee(Base):
 
     employee_id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False, unique=True)
-    shop_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    shop_id = Column(Integer, ForeignKey("shops.shop_id"), nullable=False)
     employee_name = Column(String(255))
     position = Column(String(100))
     status = Column(Enum("active", "inactive", "suspended"), default="active", index=True)
@@ -69,7 +68,7 @@ class ShopEmployee(Base):
 
     # Relationships
     user = relationship("User", foreign_keys=[user_id])
-    shop = relationship("Shop", back_populates="employees", foreign_keys=[shop_id])
+    shop = relationship("Shop", foreign_keys=[shop_id])
     creator = relationship("User", foreign_keys=[created_by])
     permissions = relationship("EmployeeRolePermission", back_populates="employee", cascade="all, delete-orphan")
 
