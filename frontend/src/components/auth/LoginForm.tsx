@@ -9,6 +9,7 @@ const LoginForm: React.FC = () => {
   const navigate = useNavigate()
   const { loading } = useAppSelector(s => s.auth)
   const [form, setForm] = useState({ email: '', password: '' })
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,7 +37,29 @@ const LoginForm: React.FC = () => {
       </div>
       <div>
         <label className="input-label">Mật khẩu</label>
-        <input className="input" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••" required />
+        <div style={{ position: 'relative' }}>
+          <input
+            className="input"
+            type={showPassword ? 'text' : 'password'}
+            value={form.password}
+            onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+            placeholder="••••••"
+            required
+            style={{ paddingRight: 44 }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(v => !v)}
+            style={{
+              position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+              background: 'none', border: 'none', cursor: 'pointer', fontSize: 18,
+              color: 'var(--gray-500)', padding: 0, lineHeight: 1,
+            }}
+            title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+          >
+            {showPassword ? '🙈' : '👁️'}
+          </button>
+        </div>
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Link to="/forgot-password" style={{ fontSize: 13, color: 'var(--primary)' }}>Quên mật khẩu?</Link>

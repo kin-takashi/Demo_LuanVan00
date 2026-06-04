@@ -9,13 +9,16 @@ from decimal import Decimal
 
 from dotenv import load_dotenv
 
-# Load .env trước khi import app
-load_dotenv()
+# Nếu có tham số --db trên command line → dùng URL đó (ưu tiên cao nhất)
+# Ví dụ: python seed.py --db "postgresql+psycopg2://..."
+_cli_db_url = None
+if "--db" in sys.argv:
+    idx = sys.argv.index("--db")
+    if idx + 1 < len(sys.argv):
+        _cli_db_url = sys.argv[idx + 1]
 
-# Đảm bảo DIRECT_URL được ưu tiên cho seed (bypass pgbouncer)
-direct_url = os.getenv("DIRECT_URL")
-if direct_url:
-    os.environ["DATABASE_URL_OVERRIDE"] = direct_url
+# Load .env (không override biến đã set từ CLI)
+load_dotenv(override=False)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -36,7 +39,8 @@ pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 
 def get_engine():
-    url = os.getenv("DIRECT_URL") or os.getenv("DATABASE_URL")
+    # Ưu tiên: CLI --db > env vars > build từ DB_*
+    url = _cli_db_url or os.getenv("DIRECT_URL") or os.getenv("DATABASE_URL")
     if not url:
         # Fallback: build từ từng biến môi trường riêng
         host = os.getenv("DB_HOST", "localhost")
@@ -79,11 +83,11 @@ def seed():
         # ================================================================
         print("📝 Tạo Roles...")
         roles_data = [
-            {"role_name": "ADMIN",      "description": "Administrator"},
-            {"role_name": "SHOP_OWNER", "description": "Shop Owner"},
-            {"role_name": "EMPLOYEE",   "description": "Shop Employee"},
-            {"role_name": "SHIPPER",    "description": "Shipper"},
-            {"role_name": "CUSTOMER",   "description": "Regular Customer"},
+            {"role_name": "admin",    "description": "Administrator"},
+            {"role_name": "shop",     "description": "Shop Owner"},
+            {"role_name": "employee", "description": "Shop Employee"},
+            {"role_name": "shipper",  "description": "Shipper"},
+            {"role_name": "customer", "description": "Regular Customer"},
         ]
         roles = {}
         for r in roles_data:
@@ -164,12 +168,12 @@ def seed():
         # ================================================================
         print("🎭 Gán User Roles...")
         role_map = [
-            (admin,   "ADMIN"),
-            (owner1,  "SHOP_OWNER"),
-            (owner2,  "SHOP_OWNER"),
-            (shipper, "SHIPPER"),
-            (cust1,   "CUSTOMER"),
-            (users["customer2@example.com"], "CUSTOMER"),
+            (admin,   "admin"),
+            (owner1,  "shop"),
+            (owner2,  "shop"),
+            (shipper, "shipper"),
+            (cust1,   "customer"),
+            (users["customer2@example.com"], "customer"),
         ]
         for user_obj, role_name in role_map:
             role_obj = roles[role_name]

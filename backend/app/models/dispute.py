@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Enum, DateTime, ForeignKey, Index, Numeric
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Index, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -10,10 +10,10 @@ class Dispute(Base):
     dispute_id = Column(Integer, primary_key=True, autoincrement=True)
     order_id = Column(Integer, ForeignKey("orders.order_id"), nullable=False)
     initiated_by = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    initiated_party = Column(Enum("user", "shop", "shipper"))
+    initiated_party = Column(String(50))
     reason = Column(Text)
     evidence_urls = Column(Text)
-    status = Column(Enum("open", "resolved", "escalated"), default="open", index=True)
+    status = Column(String(50), default="open", index=True)
     resolved_by = Column(Integer, ForeignKey("users.user_id"))
     resolution_details = Column(Text)
     refund_amount = Column(Numeric(10, 2))
