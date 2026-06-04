@@ -52,16 +52,17 @@ def get_engine():
         url = url.replace("?pgbouncer=true", "").replace("&pgbouncer=true", "")
     print(f"  🔌 Kết nối: {url.split('@')[-1] if '@' in url else url}")
     engine = create_engine(url, echo=False)
-    # Tắt FK checks trong MySQL để seed không bị lỗi ràng buộc
-    from sqlalchemy import event
-    @event.listens_for(engine, "connect")
-    def disable_fk(dbapi_conn, conn_record):
-        cursor = dbapi_conn.cursor()
-        try:
-            cursor.execute("SET FOREIGN_KEY_CHECKS=0")
-        except Exception:
-            pass  # SQLite hoặc DB khác không hỗ trợ — bỏ qua
-        cursor.close()
+    # Tắt FK checks — chỉ áp dụng MySQL (XAMPP/Docker), bỏ qua PostgreSQL
+    if "mysql" in url or "pymysql" in url:
+        from sqlalchemy import event
+        @event.listens_for(engine, "connect")
+        def disable_fk(dbapi_conn, conn_record):
+            cursor = dbapi_conn.cursor()
+            try:
+                cursor.execute("SET FOREIGN_KEY_CHECKS=0")
+            except Exception:
+                pass
+            cursor.close()
     return engine
 
 
@@ -421,12 +422,6 @@ def seed():
         traceback.print_exc()
         sys.exit(1)
     finally:
-        # Bật lại FK checks sau khi seed
-        try:
-            db.execute(text("SET FOREIGN_KEY_CHECKS=1"))
-            db.commit()
-        except Exception:
-            pass
         db.close()
 
 
