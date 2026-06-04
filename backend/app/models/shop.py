@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Enum, DateTime, ForeignKey, Date, Index, func
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Date, Index, func
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -15,7 +15,7 @@ class Shop(Base):
     rating = Column(String(5), default="0.00")
     total_followers = Column(Integer, default=0)
     total_orders = Column(Integer, default=0)
-    verification_status = Column(Enum("pending", "approved", "rejected"), default="pending", index=True)
+    verification_status = Column(String(50), default="pending", index=True)
     verified_at = Column(DateTime)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -37,7 +37,7 @@ class ShopRegistration(Base):
     cmnd_url = Column(String(500))
     cmnd_back_url = Column(String(500))
     business_reg_url = Column(String(500))
-    status = Column(Enum("pending", "approved", "rejected"), default="pending", index=True)
+    status = Column(String(50), default="pending", index=True)
     rejection_reason = Column(Text)
     reviewed_by = Column(Integer, ForeignKey("users.user_id"))
     reviewed_at = Column(DateTime)
@@ -56,7 +56,7 @@ class ShopEmployee(Base):
     shop_id = Column(Integer, ForeignKey("shops.shop_id"), nullable=False)
     employee_name = Column(String(255))
     position = Column(String(100))
-    status = Column(Enum("active", "inactive", "suspended"), default="active", index=True)
+    status = Column(String(50), default="active", index=True)
     hired_date = Column(Date)
     created_by = Column(Integer, ForeignKey("users.user_id"), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
@@ -98,7 +98,7 @@ class SystemEmployee(Base):
     user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False, unique=True)
     emp_name = Column(String(255))
     role_name = Column(String(50))
-    status = Column(Enum("active", "inactive", "suspended"), default="active", index=True)
+    status = Column(String(50), default="active", index=True)
     created_by = Column(Integer, ForeignKey("users.user_id"), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -115,7 +115,7 @@ class SystemEmployeePermission(Base):
     emp_perm_id = Column(Integer, primary_key=True, autoincrement=True)
     emp_id = Column(Integer, ForeignKey("system_employees.emp_id"), nullable=False)
     permission_code = Column(String(100))
-    scope = Column(Enum("admin", "shop", "both"), default="admin")
+    scope = Column(String(50), default="admin")
     granted_by = Column(Integer, ForeignKey("users.user_id"), nullable=False)
     granted_at = Column(DateTime, server_default=func.now())
 

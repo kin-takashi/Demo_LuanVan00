@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Enum, DateTime, ForeignKey, JSON, Index
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, JSON, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -9,7 +9,7 @@ class EmployeeActivityLog(Base):
 
     log_id = Column(Integer, primary_key=True, autoincrement=True)
     employee_id = Column(Integer)
-    employee_type = Column(Enum("shop", "system"), default="shop")
+    employee_type = Column(String(50), default="shop")
     action = Column(String(100))
     entity_type = Column(String(50))
     entity_id = Column(Integer)
@@ -46,7 +46,7 @@ class SystemLog(Base):
     __tablename__ = "system_logs"
 
     log_id = Column(Integer, primary_key=True, autoincrement=True)
-    level = Column(Enum("info", "warning", "error", "critical"), index=True)
+    level = Column(String(50), index=True)
     message = Column(Text)
     context = Column(JSON)
     created_at = Column(DateTime, server_default=func.now())

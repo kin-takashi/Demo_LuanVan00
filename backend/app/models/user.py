@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Enum, Boolean, DateTime, ForeignKey, UniqueConstraint, Index
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -15,7 +15,7 @@ class User(Base):
     phone = Column(String(20))
     address = Column(Text)
     avatar_url = Column(String(500))
-    status = Column(Enum("active", "inactive", "banned"), default="active", index=True)
+    status = Column(String(50), default="active", index=True)
     last_login = Column(DateTime)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -48,7 +48,7 @@ class UserRole(Base):
     user_role_id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
     role_id = Column(Integer, ForeignKey("roles.role_id"), nullable=False)
-    status = Column(Enum("active", "inactive"), default="active")
+    status = Column(String(50), default="active")
     current_role = Column(Boolean, default=False)
     assigned_by = Column(Integer, ForeignKey("users.user_id"))
     assigned_at = Column(DateTime, server_default=func.now())

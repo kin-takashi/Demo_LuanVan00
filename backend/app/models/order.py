@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Enum, DateTime, ForeignKey, Index, Numeric
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Index, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -19,15 +19,12 @@ class Order(Base):
     final_price = Column(Numeric(10, 2), nullable=False)
     shipping_fee = Column(Numeric(10, 2), default=0)       # Prisma: shippingFee (mới)
     # Prisma: PaymentMethod enum — thêm credit_card, bỏ vnpay (hoặc giữ cả)
-    payment_method = Column(Enum("momo", "cod", "vnpay", "credit_card"), default="cod")
-    payment_status = Column(Enum("unpaid", "paid", "failed", "refunded"), default="unpaid")
+    payment_method = Column(String(50), default="cod")
+    payment_status = Column(String(50), default="unpaid")
     # Prisma OrderStatus: PENDING,CONFIRMED,PAID,SHIPPED,DELIVERED,CANCELLED,RETURNED
     # Giữ thêm "ready_to_ship" và "completed" để tương thích workflow hiện tại
     order_status = Column(
-        Enum(
-            "pending", "confirmed", "paid", "ready_to_ship",
-            "shipped", "delivered", "completed", "cancelled", "returned"
-        ),
+        String(50),
         default="pending",
         index=True,
     )

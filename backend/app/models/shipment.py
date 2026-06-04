@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum, DateTime, ForeignKey, JSON, Index
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -11,7 +11,7 @@ class Shipper(Base):
     vehicle_type = Column(String(50))
     license_plate = Column(String(20))
     current_location = Column(JSON)
-    status = Column(Enum("available", "on_delivery", "offline"), default="offline", index=True)
+    status = Column(String(50), default="offline", index=True)
     rating = Column(String(5), default="0.00")
     total_deliveries = Column(Integer, default=0)
     verified_at = Column(DateTime)
@@ -33,7 +33,7 @@ class ShipperRegistration(Base):
     license_url = Column(String(500))
     registration_url = Column(String(500))
     id_card_url = Column(String(500))
-    status = Column(Enum("pending", "approved", "rejected"), default="pending", index=True)
+    status = Column(String(50), default="pending", index=True)
     rejection_reason = Column(String(500))
     reviewed_by = Column(Integer, ForeignKey("users.user_id"))
     reviewed_at = Column(DateTime)
@@ -53,7 +53,7 @@ class Shipment(Base):
     pickup_location = Column(String(500))
     delivery_location = Column(String(500))
     status = Column(
-        Enum("pending", "assigned", "picked_up", "in_transit", "delivered", "failed"),
+        String(50),
         default="pending",
         index=True,
     )
