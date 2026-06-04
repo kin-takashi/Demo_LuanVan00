@@ -32,18 +32,38 @@ from app.models.shipment import Shipment, Shipper
 from app.models.notification import Notification
 from app.models.voucher import Voucher
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 
 def get_engine():
     url = os.getenv("DIRECT_URL") or os.getenv("DATABASE_URL")
-    # Đảm bảo dùng psycopg2 driver
+    if not url:
+        # Fallback: build từ từng biến môi trường riêng
+        host = os.getenv("DB_HOST", "localhost")
+        port = os.getenv("DB_PORT", "3306")
+        user = os.getenv("DB_USER", "shopvn_user")
+        pwd  = os.getenv("DB_PASSWORD", "shopvn_pass")
+        name = os.getenv("DB_NAME", "ecommerce_db")
+        url = f"mysql+pymysql://{user}:{pwd}@{host}:{port}/{name}"
+    # PostgreSQL fallback driver
     if url and url.startswith("postgresql://"):
         url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
     if url and "pgbouncer=true" in url:
-        # Xóa pgbouncer param cho direct connection
         url = url.replace("?pgbouncer=true", "").replace("&pgbouncer=true", "")
-    return create_engine(url, echo=False)
+    print(f"  🔌 Kết nối: {url.split('@')[-1] if '@' in url else url}")
+    engine = create_engine(url, echo=False)
+    # Tắt FK checks — chỉ áp dụng MySQL (XAMPP/Docker), bỏ qua PostgreSQL
+    if "mysql" in url or "pymysql" in url:
+        from sqlalchemy import event
+        @event.listens_for(engine, "connect")
+        def disable_fk(dbapi_conn, conn_record):
+            cursor = dbapi_conn.cursor()
+            try:
+                cursor.execute("SET FOREIGN_KEY_CHECKS=0")
+            except Exception:
+                pass
+            cursor.close()
+    return engine
 
 
 def seed():
@@ -103,12 +123,12 @@ def seed():
         # ================================================================
         print("👥 Tạo Users...")
         users_data = [
-            {"email": "admin@example.com",     "password": "Admin@123",    "full_name": "Admin User",    "phone": "0123456789", "address": "123 Admin Street"},
-            {"email": "owner1@shop.com",        "password": "Owner@123",    "full_name": "Shop Owner 1",  "phone": "0987654321", "address": "456 Shop Street"},
-            {"email": "owner2@shop.com",        "password": "Owner@123",    "full_name": "Shop Owner 2",  "phone": "0912345678", "address": "789 Shop Avenue"},
-            {"email": "shipper1@example.com",   "password": "Shipper@123",  "full_name": "Shipper 1",     "phone": "0901234567", "address": "101 Shipper Lane"},
-            {"email": "customer1@example.com",  "password": "Customer@123", "full_name": "Customer 1",   "phone": "0945678901", "address": "202 Customer Road"},
-            {"email": "customer2@example.com",  "password": "Customer@123", "full_name": "Customer 2",   "phone": "0956789012", "address": "303 Customer Ave"},
+            {"email": "admin@example.com",     "password": "admin123",    "full_name": "Admin User",    "phone": "0123456789", "address": "123 Admin Street"},
+            {"email": "owner1@shop.com",        "password": "shop123",     "full_name": "Shop Owner 1",  "phone": "0987654321", "address": "456 Shop Street"},
+            {"email": "owner2@shop.com",        "password": "shop123",     "full_name": "Shop Owner 2",  "phone": "0912345678", "address": "789 Shop Avenue"},
+            {"email": "shipper1@example.com",   "password": "ship123",     "full_name": "Shipper 1",     "phone": "0901234567", "address": "101 Shipper Lane"},
+            {"email": "customer1@example.com",  "password": "user123",     "full_name": "Customer 1",    "phone": "0945678901", "address": "202 Customer Road"},
+            {"email": "customer2@example.com",  "password": "user123",     "full_name": "Customer 2",    "phone": "0956789012", "address": "303 Customer Ave"},
         ]
         users = {}
         for u in users_data:
@@ -389,11 +409,11 @@ def seed():
         print(f"  • Notifications: {len(notifs_data)}")
         print("\n✅ Sẵn sàng để test API!\n")
         print("🔑 Tài khoản test:")
-        print("  admin@example.com    / Admin@123    (ADMIN)")
-        print("  owner1@shop.com      / Owner@123    (SHOP_OWNER)")
-        print("  owner2@shop.com      / Owner@123    (SHOP_OWNER)")
-        print("  shipper1@example.com / Shipper@123  (SHIPPER)")
-        print("  customer1@example.com/ Customer@123 (CUSTOMER)")
+        print("  admin@example.com     / admin123  (ADMIN)")
+        print("  owner1@shop.com       / shop123   (SHOP_OWNER)")
+        print("  owner2@shop.com       / shop123   (SHOP_OWNER)")
+        print("  shipper1@example.com  / ship123   (SHIPPER)")
+        print("  customer1@example.com / user123   (CUSTOMER)")
 
     except Exception as e:
         db.rollback()

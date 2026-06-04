@@ -1,15 +1,18 @@
 import os
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Optional
 
 
 class Settings(BaseSettings):
-    # Database (PostgreSQL / Supabase)
+    # Database — nếu set DATABASE_URL trực tiếp (Supabase/PostgreSQL) thì dùng luôn
+    # nếu không thì tự build từ DB_HOST/USER/PASS (MySQL local)
+    DATABASE_URL_OVERRIDE: Optional[str] = None  # đặt tên khác để tránh xung đột property
+
     DB_HOST: str = "localhost"
-    DB_PORT: int = 5432
-    DB_USER: str = "postgres"
-    DB_PASSWORD: str = "password"
-    DB_NAME: str = "postgres"
+    DB_PORT: int = 3306
+    DB_USER: str = "shopvn_user"
+    DB_PASSWORD: str = "shopvn_pass"
+    DB_NAME: str = "ecommerce_db"
 
     # Supabase
     SUPABASE_URL: str = ""
@@ -68,7 +71,16 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self):
-        return "postgresql+psycopg2://{}:{}@{}:{}/{}".format(
+        # Ưu tiên DATABASE_URL_OVERRIDE (Supabase/PostgreSQL từ env)
+        override = os.environ.get("DATABASE_URL")
+        if override:
+            # Đảm bảo dùng psycopg2 driver cho PostgreSQL
+            if override.startswith("postgresql://") or override.startswith("postgres://"):
+                override = override.replace("postgresql://", "postgresql+psycopg2://", 1)
+                override = override.replace("postgres://", "postgresql+psycopg2://", 1)
+            return override
+        # Fallback: MySQL local (XAMPP/Docker)
+        return "mysql+pymysql://{}:{}@{}:{}/{}".format(
             self.DB_USER, self.DB_PASSWORD, self.DB_HOST, self.DB_PORT, self.DB_NAME
         )
 

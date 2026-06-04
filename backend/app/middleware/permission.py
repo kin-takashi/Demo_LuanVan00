@@ -4,6 +4,7 @@ from app.database import get_db
 from app.models.user import User
 from app.models.shop import ShopEmployee, SystemEmployee
 from app.middleware.auth import get_current_user
+from app.config import settings
 
 
 def check_employee_permission(user: User, shop_id: int, permission_code: str, db: Session) -> bool:
@@ -38,19 +39,17 @@ def check_system_employee_permission(user: User, permission_code: str, db: Sessi
 def require_permission(permission_code: str, shop_id_param: str = None):
     """Dependency factory: require a specific permission."""
     def _checker(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> User:
-        # Admin always passes
+        # ── DEV BYPASS: bỏ qua toàn bộ permission check ────────────────────
+        if settings.DEBUG:
+            return current_user
+        # ── PRODUCTION ──────────────────────────────────────────────────────
         user_roles = {ur.role.role_name for ur in current_user.user_roles if ur.status == "active"}
         if "admin" in user_roles:
             return current_user
-
-        # Shop owner with their shop also passes
         if "shop" in user_roles:
             return current_user
-
-        # System employee check
         if check_system_employee_permission(current_user, permission_code, db):
             return current_user
-
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Permission denied: {permission_code}",
